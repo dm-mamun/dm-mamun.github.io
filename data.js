@@ -1,10 +1,6 @@
 // ===== 1. PASTE YOUR FIREBASE CONFIG HERE (see setup steps). Leave empty to use the default content below. =====
 export const firebaseConfig = { apiKey: "AIzaSyB-GA2Zt05HeAFoYRq9M6xOc7QAqHqu5Ak", authDomain: "mamungithubio.firebaseapp.com", projectId: "mamungithubio", appId: "1:242539222683:web:7623d33870bcf95bdf183e" };
 
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
 
 // ===== 2. Default content (taken from your CV). Used until you save from the admin panel. =====
 export const defaults = {
