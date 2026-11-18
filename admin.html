@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin – Portfolio</title>
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--tx:#14181f;--mu:#5b6573;--ac:#0b6bcb;--bd:#d9dee7}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#171b22;--tx:#e8ecf2;--mu:#98a2b3;--ac:#5aa9ff;--bd:#2a313c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,sans-serif}
+.w{max-width:820px;margin:0 auto;padding:24px}
+.bar{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--bd);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:5}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:14px}
+h2{margin:28px 0 12px;font-size:19px}
+label{display:block;font-size:12px;color:var(--mu);margin:8px 0 3px}
+input,textarea{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);font:inherit}
+textarea{min-height:64px;resize:vertical}
+button{padding:8px 14px;border-radius:6px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer;font:inherit}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff}
+button.x{color:#d33;float:right;padding:3px 10px;font-size:13px}
+#msg{font-size:13px;color:var(--mu)}
+#login{max-width:340px;margin:12vh auto}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div id="login" class="card hide">
+  <h2 style="margin-top:0">Admin login</h2>
+  <label>Email</label><input id="em" type="email">
+  <label>Password</label><input id="pw" type="password">
+  <p><button class="p" id="go">Sign in</button></p><div id="msg0" style="color:#d33;font-size:13px"></div>
+</div>
+<div id="ed" class="hide">
+  <div class="bar"><b>Portfolio admin</b><span id="msg"></span>
+    <span><button onclick="window.open('index.html')">View site</button> <button class="p" id="save">Save</button> <button id="out">Sign out</button></span></div>
+  <div class="w" id="form"></div>
+</div>
+<script type="module">
+import { defaults, load, ready, fb } from "./data.js";
+const $ = id => document.getElementById(id);
+const schema = {
+  skills: ["Skills", { group: "Group", items: "Items (comma separated)" }],
+  projects: ["Projects", { title: "Title", date: "Date", desc: ["Description"] }],
+  experience: ["Experience", { role: "Role", org: "Organization", date: "Date", desc: ["Description"] }],
+  achievements: ["Achievements", { text: "Achievement", date: "Date" }]
+};
+const pf = { name: "Name", title: "Headline", bio: ["Bio"], email: "Email", location: "Location", github: "GitHub URL", linkedin: "LinkedIn URL" };
+let data, F;
+const e = s => String(s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+const field = (path, lab, v) => {
+  const big = Array.isArray(lab); lab = big ? lab[0] : lab;
+  return `<label>${lab}</label>` + (big ? `<textarea data-p="${path}">${e(v)}</textarea>` : `<input data-p="${path}" value="${e(v)}">`);
+};
+function render() {
+  let h = `<h2>Profile</h2><div class="card">${Object.entries(pf).map(([k, l]) => field("profile." + k, l, data.profile[k])).join("")}</div>`;
+  for (const [s, [title, fields]] of Object.entries(schema)) {
+    h += `<h2>${title}</h2>`;
+    data[s].forEach((it, i) => {
+      h += `<div class="card"><button class="x" data-del="${s}.${i}">Delete</button>${Object.entries(fields).map(([k, l]) => field(`${s}.${i}.${k}`, l, it[k])).join("")}</div>`;
+    });
+    h += `<button data-add="${s}">+ Add ${title.replace(/s$/, "").toLowerCase()}</button>`;
+  }
+  $("form").innerHTML = h;
+}
+const sync = () => document.querySelectorAll("[data-p]").forEach(el => {
+  const k = el.dataset.p.split("."); let o = data;
+  while (k.length > 1) o = o[k.shift()];
+  o[k[0]] = el.value;
+});
+$("form").addEventListener("click", ev => {
+  const t = ev.target; sync();
+  if (t.dataset.add) { data[t.dataset.add].push(Object.fromEntries(Object.keys(schema[t.dataset.add][1]).map(k => [k, ""]))); render(); }
+  if (t.dataset.del) { const [s, i] = t.dataset.del.split("."); if (confirm("Delete this item?")) { data[s].splice(+i, 1); render(); } }
+});
+$("save").onclick = async () => {
+  sync(); $("msg").textContent = "Saving…";
+  try { await F.f.setDoc(F.f.doc(F.db, "portfolio", "main"), data); $("msg").textContent = "Saved ✓"; }
+  catch (err) { $("msg").textContent = "Error: " + err.message; }
+};
+async function start() {
+  data = structuredClone(await load()); $("login").classList.add("hide"); $("ed").classList.remove("hide"); render();
+}
+if (!ready) {
+  $("ed").classList.remove("hide"); data = structuredClone(defaults); render();
+  $("msg").textContent = "Firebase not configured: edits can't be saved yet";
+  $("save").onclick = () => { sync(); navigator.clipboard.writeText(JSON.stringify(data, null, 2)); $("msg").textContent = "JSON copied (no backend yet)"; };
+} else {
+  F = await fb();
+  F.u.onAuthStateChanged(F.auth, u => u ? start() : ($("ed").classList.add("hide"), $("login").classList.remove("hide")));
+  $("go").onclick = () => F.u.signInWithEmailAndPassword(F.auth, $("em").value, $("pw").value).catch(() => $("msg0").textContent = "Wrong email or password.");
+  $("out").onclick = () => F.u.signOut(F.auth);
+}
+</script>
+</body>
+</html>

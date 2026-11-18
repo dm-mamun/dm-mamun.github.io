@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Md. Mamun Ahmed – Portfolio</title>
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--tx:#14181f;--mu:#5b6573;--ac:#0b6bcb;--bd:#e3e7ee}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#171b22;--tx:#e8ecf2;--mu:#98a2b3;--ac:#5aa9ff;--bd:#262c36}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif}
+nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--bd);display:flex;gap:20px;padding:14px 24px;overflow-x:auto;z-index:5}
+nav a{color:var(--mu);text-decoration:none;font-size:14px;white-space:nowrap}nav a:hover{color:var(--ac)}
+main{max-width:860px;margin:0 auto;padding:0 24px 80px}
+header{padding:72px 0 40px}
+h1{font-size:clamp(32px,6vw,52px);margin:0 0 8px;line-height:1.1}
+.t{color:var(--ac);font-weight:600;margin:0 0 16px}
+.bio{color:var(--mu);max-width:640px}
+.links{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.links a{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:8px;text-decoration:none;font-size:14px}
+.links a:hover{border-color:var(--ac)}
+section{padding-top:48px}
+h2{font-size:22px;margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px 20px;margin-bottom:14px}
+.row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card h3{margin:0;font-size:17px}.d{color:var(--mu);font-size:13px}.o{color:var(--ac);font-size:14px}
+.card p{margin:8px 0 0;color:var(--mu);font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{background:var(--bg);border:1px solid var(--bd);padding:3px 12px;border-radius:99px;font-size:13px}
+footer{text-align:center;color:var(--mu);font-size:13px;padding:30px}
+footer a{color:var(--mu)}
+</style>
+</head>
+<body>
+<nav><a href="#about">About</a><a href="#skills">Skills</a><a href="#projects">Projects</a><a href="#experience">Experience</a><a href="#achievements">Achievements</a></nav>
+<main id="app"></main>
+<footer><span id="yr"></span> · <a href="admin.html">Admin</a></footer>
+<script type="module">
+import { load } from "./data.js";
+const e = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const d = await load(), p = d.profile;
+document.title = p.name + " – Portfolio";
+document.getElementById("yr").textContent = "© " + new Date().getFullYear() + " " + p.name;
+const link = (u, t) => u ? `<a href="${e(u)}" target="_blank" rel="noopener">${t}</a>` : "";
+const sec = (id, t, body) => body ? `<section id="${id}"><h2>${t}</h2>${body}</section>` : "";
+document.getElementById("app").innerHTML = `
+<header id="about"><h1>${e(p.name)}</h1><p class="t">${e(p.title)}</p><p class="bio">${e(p.bio)}</p>
+<div class="links">${p.email ? `<a href="mailto:${e(p.email)}">Email</a>` : ""}${link(p.github, "GitHub")}${link(p.linkedin, "LinkedIn")}${p.location ? `<a>${e(p.location)}</a>` : ""}</div></header>
+${sec("skills", "Skills", d.skills.map(s => `<div class="card"><h3>${e(s.group)}</h3><div class="chips">${s.items.split(",").map(x => `<span class="chip">${e(x.trim())}</span>`).join("")}</div></div>`).join(""))}
+${sec("projects", "Projects", d.projects.map(x => `<div class="card"><div class="row"><h3>${e(x.title)}</h3><span class="d">${e(x.date)}</span></div><p>${e(x.desc)}</p></div>`).join(""))}
+${sec("experience", "Experience", d.experience.map(x => `<div class="card"><div class="row"><h3>${e(x.role)}</h3><span class="d">${e(x.date)}</span></div><div class="o">${e(x.org)}</div><p>${e(x.desc)}</p></div>`).join(""))}
+${sec("achievements", "Achievements & Activities", d.achievements.map(x => `<div class="card"><div class="row"><span>${e(x.text)}</span><span class="d">${e(x.date)}</span></div></div>`).join(""))}`;
+</script>
+</body>
+</html>
