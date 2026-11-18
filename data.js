@@ -1,18 +1,6 @@
 // ===== 1. PASTE YOUR FIREBASE CONFIG HERE (see setup steps). Leave empty to use the default content below. =====
-export const firebaseConfig = { apiKey: "", authDomain: "", projectId: "", appId: "" };
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+export const firebaseConfig = { apiKey: "AIzaSyB-GA2Zt05HeAFoYRq9M6xOc7QAqHqu5Ak", authDomain: "mamungithubio.firebaseapp.com", projectId: "mamungithubio", appId: "1:242539222683:web:7623d33870bcf95bdf183e" };
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyB-GA2Zt05HeAFoYRq9M6xOc7QAqHqu5Ak",
-  authDomain: "mamungithubio.firebaseapp.com",
-  projectId: "mamungithubio",
-  storageBucket: "mamungithubio.firebasestorage.app",
-  messagingSenderId: "242539222683",
-  appId: "1:242539222683:web:7623d33870bcf95bdf183e"
 };
 
 // Initialize Firebase
