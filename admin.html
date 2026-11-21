@@ -42,7 +42,7 @@ button.x{color:#d33}
 </div>
 <div id="ed" class="hide">
   <div class="bar"><div class="r"><b>Portfolio admin</b><span id="msg"></span>
-    <span><button onclick="window.open('index.html')">View site</button> <button id="out">Sign out</button></span></div><div id="tabs"></div></div>
+    <span><button onclick="window.open('index.html')">View site</button> <button id="bk">Backup</button> <button id="out">Sign out</button></span></div><div id="tabs"></div></div>
   <div class="w" id="form"></div>
 </div>
 <script type="module">
@@ -134,6 +134,15 @@ async function importOld() {
   } catch (err) { msg("Error: " + err.message); }
 }
 
+$("bk").onclick = async () => {
+  if (!guard()) return; msg("Preparing backup…");
+  try {
+    sync(); const out = { exported: new Date().toISOString(), main: S.main };
+    for (const c of [...Object.keys(COLS), "messages"]) { await ensure(c); out[c] = c === "messages" ? msgs : S[c] || []; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: "application/json" }));
+    a.download = "portfolio-backup-" + new Date().toISOString().slice(0, 10) + ".json"; a.click(); msg("Backup downloaded ✓");
+  } catch (err) { msg("Error: " + err.message); }
+};
 $("tabs").onclick = async ev => { const b = ev.target.dataset.tab; if (!b) return; sync(); tab = b; try { await ensure(b); } catch (err) { msg("Error: " + err.message); } render(); };
 $("form").addEventListener("toggle", ev => { const k = ev.target.dataset?.k; if (k) ev.target.open ? open.add(k) : open.delete(k); }, true);
 $("form").addEventListener("click", async ev => {
