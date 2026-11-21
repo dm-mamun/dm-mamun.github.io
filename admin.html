@@ -10,23 +10,27 @@
 @media(prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#171b22;--tx:#e8ecf2;--mu:#98a2b3;--ac:#5aa9ff;--bd:#2a313c}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,sans-serif}
-.w{max-width:820px;margin:0 auto;padding:24px}
-.bar{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--bd);padding:12px 24px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;z-index:5}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:14px}
-h2{margin:28px 0 12px;font-size:19px}
-label{display:block;font-size:12px;color:var(--mu);margin:8px 0 3px}
-input,textarea{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);font:inherit}
-textarea{min-height:76px;resize:vertical}
-button{padding:8px 14px;border-radius:6px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer;font:inherit}
+.w{max-width:840px;margin:0 auto;padding:20px 24px}
+.bar{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--bd);padding:10px 24px;z-index:5}
+.bar .r{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+#tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:12px}
+details.card summary{cursor:pointer;font-weight:600}details.card summary small{color:var(--mu);font-weight:400;margin-left:8px}
+h2{margin:26px 0 12px;font-size:19px}
+label{display:block;font-size:12px;color:var(--mu);margin:10px 0 3px}
+input,textarea,select{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);font:inherit}
+textarea{min-height:76px;resize:vertical}textarea.long{min-height:260px;font-family:ui-monospace,monospace;font-size:14px}
+button{padding:7px 13px;border-radius:6px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer;font:inherit}
 button.p{background:var(--ac);border-color:var(--ac);color:#fff}
-button.x{color:#d33;float:right;padding:3px 10px;font-size:13px}
+button.x{color:#d33}
+.card>button.x:first-child{float:right}
 #msg{font-size:13px;color:var(--mu)}
 #login{max-width:340px;margin:12vh auto}
 .hide{display:none}
 .im{display:flex;gap:12px;align-items:center}
 .im img,.im .ph{width:90px;height:60px;border-radius:6px;object-fit:cover;background:var(--bd);flex:none}
 .im>div{flex:1;display:grid;gap:6px}
-.hint{font-size:12px;color:var(--mu);margin:0 0 12px}
+.hint{font-size:12px;color:var(--mu);margin:4px 0 0}
 </style>
 </head>
 <body>
@@ -37,83 +41,137 @@ button.x{color:#d33;float:right;padding:3px 10px;font-size:13px}
   <p><button class="p" id="go">Sign in</button></p><div id="msg0" style="color:#d33;font-size:13px"></div>
 </div>
 <div id="ed" class="hide">
-  <div class="bar"><b>Portfolio admin</b><span id="msg"></span>
-    <span><button onclick="window.open('index.html')">View site</button> <button class="p" id="save">Save</button> <button id="out">Sign out</button></span></div>
-  <div class="w"><p class="hint">Images you upload are shrunk automatically and saved inside your database (limit about 1 MB in total, shown at the top). For many or large images, put them in an <b>images</b> folder in your GitHub repository and paste the path, for example <b>images/rover.jpg</b>.</p><div id="form"></div></div>
+  <div class="bar"><div class="r"><b>Portfolio admin</b><span id="msg"></span>
+    <span><button onclick="window.open('index.html')">View site</button> <button id="out">Sign out</button></span></div><div id="tabs"></div></div>
+  <div class="w" id="form"></div>
 </div>
 <script type="module">
-import { defaults, load, ready, fb } from "./data.js";
+import { defaults, ready, F, SEED, e } from "./lib.js";
 const $ = id => document.getElementById(id);
-const IMG = (l, w) => [l, "img", w];
-const schema = {
+const IMG = (l, w) => [l, "img", w], MD = "Full details (Markdown)";
+const PF = { name: "Name", title: "Headline", bio: ["Short bio (top of home page)", "area"], about: ["About me (longer, Markdown)", "long"], photo: IMG("Your photo (square works best)", 480), email: "Email", phone: "Phone / WhatsApp number", location: "Location badge (e.g. Sylhet, Bangladesh)", address: "Full address", cv: "CV link (PDF URL or file path)", github: "GitHub URL", linkedin: "LinkedIn URL", facebook: "Facebook URL", instagram: "Instagram URL", youtube: "YouTube URL", x: "X (Twitter) URL" };
+const ARR = {
   stats: ["Highlight numbers", { value: "Number (e.g. 12+)", label: "Label" }],
   skills: ["Skills", { group: "Group", items: "Items (comma separated)" }],
-  projects: ["Projects", { title: "Title", date: "Date", desc: ["Description", "area"], image: IMG("Project image", 800), tags: "Tags (comma separated)", link: "Project link (GitHub, demo, video…)" }],
   experience: ["Experience", { role: "Role", org: "Organization", date: "Date", desc: ["Description", "area"] }],
-  achievements: ["Achievements", { text: "Achievement", date: "Date" }]
+  education: ["Education", { degree: "Degree / certificate", school: "Institution", date: "Years", detail: "Result / note" }],
+  achievements: ["Achievements", { text: "Achievement", date: "Date" }],
+  testimonials: ["Testimonials", { name: "Name", role: "Role / organization", text: ["What they said", "area"], photo: IMG("Photo (optional)", 160) }]
 };
-const pf = { name: "Name", title: "Headline", bio: ["Bio", "area"], photo: IMG("Your photo (square works best)", 480), email: "Email", location: "Location", cv: "CV link (PDF URL or file path)", github: "GitHub URL", linkedin: "LinkedIn URL", facebook: "Facebook URL", instagram: "Instagram URL", youtube: "YouTube URL", x: "X (Twitter) URL" };
-const SEED = [{ value: "12+", label: "National competitions" }, { value: "92.6%", label: "BCI model accuracy" }, { value: "7+", label: "Teams mentored" }, { value: "6th", label: "World rank, ARC 2026" }];
-let data, F;
-const e = s => String(s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-const get = p => p.split(".").reduce((o, k) => o?.[k], data);
-const set = (p, v) => { const k = p.split("."); let o = data; while (k.length > 1) o = o[k.shift()]; o[k[0]] = v; };
-const field = (path, spec, v) => {
-  if (!Array.isArray(spec)) spec = [spec, "text"];
-  const [l, t, w] = spec; v = v ?? "";
-  if (t === "area") return `<label>${l}</label><textarea data-p="${path}">${e(v)}</textarea>`;
-  if (t === "img") return `<label>${l}</label><div class="im">${v ? `<img src="${e(v)}">` : `<div class="ph"></div>`}<div>${v.startsWith("data:") ? `<small>Uploaded image ✓</small>` : `<input data-p="${path}" value="${e(v)}" placeholder="Paste image URL, or upload below">`}<input type="file" accept="image/*" data-f="${path}" data-w="${w}">${v ? `<button data-rm="${path}">Remove image</button>` : ""}</div></div>`;
-  return `<label>${l}</label><input data-p="${path}" value="${e(v)}">`;
+const COLS = {
+  projects: ["Projects", { title: "Title", date: "Date (e.g. March 2026)", desc: ["Short summary (shown on cards)", "area"], image: IMG("Cover image", 800), tags: "Tags (comma separated)", link: "Project / demo link", link2: "Source code link", content: [MD, "long"] }],
+  posts: ["Blog", { title: "Title", date: "Date", desc: ["Short summary", "area"], image: IMG("Cover image", 800), tags: "Tags (comma separated)", content: ["Post (Markdown)", "long"] }],
+  research: ["Research", { title: "Paper title", status: ["Status", "sel", "Published,Under review,Ongoing,Unpublished"], venue: "Journal / conference", authors: "Authors", date: "Year / date", desc: ["Abstract", "area"], tags: "Keywords (comma separated)", link: "Paper / DOI link", link2: "PDF link", content: ["Extra details (Markdown, optional)", "long"] }],
+  certificates: ["Certificates", { title: "Certificate name", kind: ["Type", "sel", "Course,Skill,Training,Award"], issuer: "Issued by", date: "Date", desc: ["Notes (optional)", "area"], image: IMG("Certificate image", 900), link: "Verification link (optional)" }],
+  press: ["Press", { title: "Headline", outlet: "Newspaper / channel / site", date: "Date", desc: ["Short note (optional)", "area"], image: IMG("Thumbnail (optional)", 600), link: "Link to the coverage" }]
 };
+const TABS = [["profile", "Profile"], ["resume", "Resume"], ["testimonials", "Testimonials"], ["projects", "Projects"], ["posts", "Blog"], ["research", "Research"], ["certificates", "Certificates"], ["press", "Press"], ["messages", "Messages"]];
+const MAINTABS = { resume: ["stats", "skills", "experience", "education", "achievements"], testimonials: ["testimonials"] };
+let S = {}, tab = "profile", ctx, msgs = [], open = new Set(); const loaded = {};
+const msg = t => $("msg").textContent = t;
+const get = p => p.split(".").reduce((o, k) => o?.[k], S);
+const set = (p, v) => { const k = p.split("."); let o = S; while (k.length > 1) o = o[k.shift()]; o[k[0]] = v; };
+const blank = f => Object.fromEntries(Object.keys(f).map(k => [k, ""]));
+
+function field(path, spec, v) {
+  if (!Array.isArray(spec)) spec = [spec];
+  const [l, t = "text", x] = spec; v = v ?? ""; const lab = `<label>${l}</label>`;
+  if (t === "area") return `${lab}<textarea data-p="${path}">${e(v)}</textarea>`;
+  if (t === "long") return `${lab}<textarea class="long" data-p="${path}">${e(v)}</textarea><div class="hint">Markdown: # Heading, **bold**, - list, [text](url), ![caption](image-url)</div>`;
+  if (t === "sel") return `${lab}<select data-p="${path}">${x.split(",").map(o => `<option ${o === v ? "selected" : ""}>${o}</option>`).join("")}</select>`;
+  if (t === "img") return `${lab}<div class="im">${v ? `<img src="${e(v)}">` : `<div class="ph"></div>`}<div>${String(v).startsWith("data:") ? `<small>Uploaded image ✓</small>` : `<input data-p="${path}" value="${e(v)}" placeholder="Paste image URL or path, or upload below">`}<input type="file" accept="image/*" data-f="${path}" data-w="${x}">${v ? `<button data-rm="${path}">Remove image</button>` : ""}</div></div>`;
+  return `${lab}<input data-p="${path}" value="${e(v)}">`;
+}
+const saveMain = () => `<p><button class="p" data-savemain>Save changes</button></p>`;
+const arrBlock = key => { const [title, f] = ARR[key]; return `<h2>${title}</h2>` + (S.main[key] || []).map((it, i) => `<div class="card"><button class="x" data-del="main.${key}.${i}">Delete</button>${Object.entries(f).map(([k, l]) => field(`main.${key}.${i}.${k}`, l, it[k])).join("")}</div>`).join("") + `<button data-add="main.${key}">+ Add</button>`; };
+function colView(c) {
+  const [title, f] = COLS[c], items = S[c] || [], one = title.replace(/s$/, "").toLowerCase();
+  let h = `<p><button class="p" data-new="${c}">+ New ${one}</button></p>`;
+  if (c === "projects" && !items.length && (S.main.projects || []).length) h += `<div class="card">You have ${S.main.projects.length} projects from the old version. <button class="p" data-import>Import them</button></div>`;
+  return h + items.map((it, i) => { const k = c + "." + it.id; return `<details class="card" data-k="${k}" ${open.has(k) ? "open" : ""}><summary>${e(it.title || "(untitled)")}<small>${e(it.date || "")}</small></summary>${Object.entries(f).map(([n, l]) => field(`${c}.${i}.${n}`, l, it[n])).join("")}<p><button class="p" data-save="${c}.${i}">Save</button> <button class="x" data-rmitem="${c}.${i}">Delete</button></p></details>`; }).join("");
+}
+const msgView = () => `<h2>Messages</h2>` + (msgs.length ? msgs.map((m, i) => `<div class="card"><button class="x" data-delmsg="${i}">Delete</button><b>${e(m.name)}</b> · <a href="mailto:${e(m.email)}">${e(m.email)}</a><div class="hint">${new Date(m.ts).toLocaleString()}</div><p style="white-space:pre-wrap">${e(m.message)}</p></div>`).join("") : "<p>No messages yet.</p>");
+
 function render() {
-  let h = `<h2>Profile & social links</h2><div class="card">${Object.entries(pf).map(([k, l]) => field("profile." + k, l, data.profile[k])).join("")}</div>`;
-  for (const [s, [title, fields]] of Object.entries(schema)) {
-    h += `<h2>${title}</h2>`;
-    data[s].forEach((it, i) => { h += `<div class="card"><button class="x" data-del="${s}.${i}">Delete</button>${Object.entries(fields).map(([k, l]) => field(`${s}.${i}.${k}`, l, it[k])).join("")}</div>`; });
-    h += `<button data-add="${s}">+ Add ${title.replace(/s$/, "").toLowerCase()}</button>`;
-  }
-  $("form").innerHTML = h; size();
+  $("tabs").innerHTML = TABS.map(([k, l]) => `<button class="${k === tab ? "p" : ""}" data-tab="${k}">${l}</button>`).join("");
+  let h = "";
+  if (tab === "profile") h = `<div class="card">${Object.entries(PF).map(([k, l]) => field("main.profile." + k, l, S.main.profile[k])).join("")}</div>` + saveMain();
+  else if (MAINTABS[tab]) h = MAINTABS[tab].map(arrBlock).join("") + saveMain();
+  else if (COLS[tab]) h = colView(tab);
+  else h = msgView();
+  $("form").innerHTML = h;
+  if (!COLS[tab] && tab !== "messages") { const kb = Math.round(JSON.stringify(S.main).length / 1024); msg(`Page data: ${kb} KB / ~1000 KB` + (kb > 900 ? " ⚠ too big, use image links" : "")); }
 }
-const size = () => { const kb = Math.round(JSON.stringify(data).length / 1024); $("msg").textContent = `Size: ${kb} KB / ~1000 KB` + (kb > 900 ? " ⚠ too big, use image URLs" : ""); };
 const sync = () => document.querySelectorAll("[data-p]").forEach(el => set(el.dataset.p, el.value));
-function shrink(file, w) {
-  return new Promise((res, rej) => {
-    const img = new Image(), url = URL.createObjectURL(file);
-    img.onload = () => { const r = Math.min(1, w / img.width), c = document.createElement("canvas"); c.width = img.width * r; c.height = img.height * r; c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", .72)); };
-    img.onerror = rej; img.src = url;
-  });
+const shrink = (file, w) => new Promise((res, rej) => {
+  const img = new Image(), url = URL.createObjectURL(file);
+  img.onload = () => { const r = Math.min(1, w / img.width), c = document.createElement("canvas"); c.width = img.width * r; c.height = img.height * r; c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", .72)); };
+  img.onerror = rej; img.src = url;
+});
+const guard = () => { if (!ready) { msg("Firebase is not configured in data.js"); return false; } return true; };
+const mainRef = () => ctx.f.doc(ctx.db, "portfolio", "main");
+
+async function ensure(t) {
+  if (!ready || loaded[t]) return;
+  if (COLS[t]) { const s = await ctx.f.getDocs(ctx.f.collection(ctx.db, t)); S[t] = s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => (b.ts || 0) - (a.ts || 0)); }
+  if (t === "messages") { const s = await ctx.f.getDocs(ctx.f.collection(ctx.db, "messages")); msgs = s.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => b.ts - a.ts); }
+  loaded[t] = 1;
 }
-$("form").addEventListener("click", ev => {
-  const t = ev.target; sync();
-  if (t.dataset.add) { data[t.dataset.add].push(Object.fromEntries(Object.keys(schema[t.dataset.add][1]).map(k => [k, ""]))); render(); }
-  if (t.dataset.rm) { set(t.dataset.rm, ""); render(); }
-  if (t.dataset.del && confirm("Delete this item?")) { const [s, i] = t.dataset.del.split("."); data[s].splice(+i, 1); render(); }
+async function saveItem(c, i) {
+  if (!guard()) return; sync();
+  const { id, ...data } = S[c][i];
+  if (JSON.stringify(data).length > 950000) { msg("Too large: use smaller or fewer images (or an image link)."); return; }
+  msg("Saving…");
+  try { await ctx.f.setDoc(ctx.f.doc(ctx.db, c, id), data); msg("Saved ✓"); render(); } catch (err) { msg("Error: " + err.message); }
+}
+async function importOld() {
+  if (!guard()) return; sync(); const old = S.main.projects || [], n = old.length; msg("Importing…");
+  try {
+    for (let i = 0; i < n; i++) { const o = old[i]; await ctx.f.setDoc(ctx.f.doc(ctx.db, "projects", Date.now().toString(36) + i), { title: o.title || "", date: o.date || "", desc: o.desc || "", image: o.image || "", tags: o.tags || "", link: o.link || "", ts: Date.now() + n - i }); }
+    delete S.main.projects; await ctx.f.setDoc(mainRef(), S.main); loaded.projects = 0; await ensure("projects"); msg("Imported ✓"); render();
+  } catch (err) { msg("Error: " + err.message); }
+}
+
+$("tabs").onclick = async ev => { const b = ev.target.dataset.tab; if (!b) return; sync(); tab = b; try { await ensure(b); } catch (err) { msg("Error: " + err.message); } render(); };
+$("form").addEventListener("toggle", ev => { const k = ev.target.dataset?.k; if (k) ev.target.open ? open.add(k) : open.delete(k); }, true);
+$("form").addEventListener("click", async ev => {
+  const t = ev.target, D = t.dataset; if (!D) return; sync();
+  if (D.savemain !== undefined) {
+    if (!guard()) return;
+    if (JSON.stringify(S.main).length > 950000) { msg("Too large: use image links instead of uploads."); return; }
+    msg("Saving…"); try { await ctx.f.setDoc(mainRef(), S.main); msg("Saved ✓"); } catch (err) { msg("Error: " + err.message); }
+  }
+  if (D.add) { get(D.add).push(blank(ARR[D.add.split(".")[1]][1])); render(); }
+  if (D.del && confirm("Delete this item? (Click Save changes afterwards)")) { const k = D.del.split("."), i = k.pop(); get(k.join(".")).splice(+i, 1); render(); }
+  if (D.rm) { set(D.rm, ""); render(); }
+  if (D.new) { const id = Date.now().toString(36); (S[D.new] ||= []).unshift({ id, ts: Date.now(), ...blank(COLS[D.new][1]), ...(D.new === "research" ? { status: "Ongoing" } : {}) }); open.add(D.new + "." + id); render(); }
+  if (D.save) { const [c, i] = D.save.split("."); saveItem(c, +i); }
+  if (D.rmitem && confirm("Delete this item permanently?")) {
+    const [c, i] = D.rmitem.split("."); try { if (guard()) await ctx.f.deleteDoc(ctx.f.doc(ctx.db, c, S[c][i].id)); S[c].splice(+i, 1); render(); msg("Deleted"); } catch (err) { msg("Error: " + err.message); }
+  }
+  if (D.import !== undefined) importOld();
+  if (D.delmsg && confirm("Delete this message?")) { try { await ctx.f.deleteDoc(ctx.f.doc(ctx.db, "messages", msgs[+D.delmsg].id)); msgs.splice(+D.delmsg, 1); render(); } catch (err) { msg("Error: " + err.message); } }
 });
 $("form").addEventListener("change", async ev => {
   const t = ev.target; if (!t.dataset.f || !t.files[0]) return;
-  sync(); try { set(t.dataset.f, await shrink(t.files[0], +t.dataset.w)); render(); } catch { $("msg").textContent = "Could not read that image."; }
+  sync(); try { set(t.dataset.f, await shrink(t.files[0], +t.dataset.w)); render(); } catch { msg("Could not read that image."); }
 });
-$("save").onclick = async () => {
-  sync(); $("msg").textContent = "Saving…";
-  try { await F.f.setDoc(F.f.doc(F.db, "portfolio", "main"), data); $("msg").textContent = "Saved ✓"; }
-  catch (err) { $("msg").textContent = "Error: " + err.message; }
-};
-function prep(d) {
-  data = structuredClone(d); data.profile ||= {};
-  data.stats ||= structuredClone(SEED);
-  for (const s of Object.keys(schema)) data[s] ||= [];
+
+function prep(m) {
+  const M = S.main = structuredClone(m); M.profile ||= {}; M.stats ||= structuredClone(SEED.stats); M.education ||= structuredClone(SEED.education);
+  for (const k of ["skills", "experience", "achievements", "testimonials"]) M[k] ||= [];
 }
-if (!ready) {
-  $("ed").classList.remove("hide"); prep(defaults); render();
-  $("msg").textContent = "Firebase not configured: edits can't be saved";
-} else {
-  F = await fb();
-  F.u.onAuthStateChanged(F.auth, async u => {
-    if (u) { prep(await load()); $("login").classList.add("hide"); $("ed").classList.remove("hide"); render(); }
-    else { $("ed").classList.add("hide"); $("login").classList.remove("hide"); }
+if (!ready) { $("ed").classList.remove("hide"); prep(defaults); render(); msg("Firebase not configured: nothing can be saved yet"); }
+else {
+  ctx = await F();
+  ctx.u.onAuthStateChanged(ctx.auth, async u => {
+    if (u) {
+      try { const s = await ctx.f.getDoc(mainRef()); prep(s.exists() ? s.data() : defaults); } catch (err) { prep(defaults); }
+      $("login").classList.add("hide"); $("ed").classList.remove("hide"); render();
+    } else { $("ed").classList.add("hide"); $("login").classList.remove("hide"); }
   });
-  $("go").onclick = () => F.u.signInWithEmailAndPassword(F.auth, $("em").value, $("pw").value).catch(() => $("msg0").textContent = "Wrong email or password.");
-  $("out").onclick = () => F.u.signOut(F.auth);
+  $("go").onclick = () => ctx.u.signInWithEmailAndPassword(ctx.auth, $("em").value, $("pw").value).catch(() => $("msg0").textContent = "Wrong email or password.");
+  $("out").onclick = () => ctx.u.signOut(ctx.auth);
 }
 </script>
 </body>
