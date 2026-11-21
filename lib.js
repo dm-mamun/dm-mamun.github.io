@@ -13,6 +13,12 @@ export const SEED = {
     { degree: "Secondary School Certificate", school: "Jalalpur High School, Sylhet", date: "2017 – 2019", detail: "GPA 4.50 / 5.00" }
   ]
 };
+SEED.services = [
+  { title: "Embedded & IoT development", desc: "Firmware, sensors and connected devices on ESP32, Arduino and more." },
+  { title: "PCB design & fabrication", desc: "Schematics and custom boards in Altium and EasyEDA, from prototype to fabrication." },
+  { title: "Robotics & automation", desc: "Autonomous robots, rovers and PLC-based industrial automation." },
+  { title: "Training & workshops", desc: "Hands-on sessions on electronics, microcontrollers and robotics." }
+];
 export const META = {
   projects: ["Projects", "Things I’ve designed, built and researched."],
   research: ["Research", "Published, under-review and ongoing work."],
@@ -76,6 +82,7 @@ export function md(s) {
     if (l.trim().startsWith("```")) { fp(); fu(); o += code ? "</code></pre>" : "<pre><code>"; code = !code; continue; }
     if (code) { o += l + "\n"; continue; }
     let m;
+    if ((m = l.trim().match(/^https:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/))) { fp(); fu(); o += `<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/${m[1]}" loading="lazy" allowfullscreen title="Video"></iframe></div>`; continue; }
     if (!l.trim()) { fp(); fu(); }
     else if ((m = l.match(/^(#{1,3})\s+(.*)/))) { fp(); fu(); const n = m[1].length + 1; o += `<h${n}>${inl(m[2])}</h${n}>`; }
     else if ((m = l.match(/^[-*]\s+(.*)/))) { fp(); if (!ul) { o += "<ul>"; ul = true; } o += `<li>${inl(m[1])}</li>`; }
@@ -92,6 +99,13 @@ export function initTheme(btn) {
     const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme:dark)").matches;
     r.dataset.theme = dark ? "light" : "dark"; try { localStorage.setItem("theme", r.dataset.theme); } catch { }
   };
+}
+export function extras() {
+  const nav = document.querySelector("nav"), mb = document.getElementById("mb");
+  if (mb) { mb.onclick = () => nav.classList.toggle("open"); nav.addEventListener("click", ev => ev.target.closest(".nl a") && nav.classList.remove("open")); }
+  const t = document.createElement("button"); t.id = "top"; t.setAttribute("aria-label", "Back to top"); t.textContent = "↑";
+  t.onclick = () => scrollTo({ top: 0, behavior: "smooth" }); document.body.appendChild(t);
+  addEventListener("scroll", () => t.classList.toggle("show", scrollY > 600), { passive: true });
 }
 export function reveal() {
   const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(x => x.isIntersecting && (x.target.classList.add("in"), io.unobserve(x.target))), { threshold: .08 }) : null;

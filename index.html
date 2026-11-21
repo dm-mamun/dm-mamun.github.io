@@ -7,16 +7,16 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<nav><div class="w"><b id="nm"></b><span class="nl" id="nl"></span><button id="th" aria-label="Toggle theme">◐</button></div></nav>
+<nav><div class="w"><b id="nm"></b><span class="nl" id="nl"></span><button id="mb" aria-label="Menu">☰</button><button id="th" aria-label="Toggle theme">◐</button></div></nav>
 <main id="app"></main>
 <footer id="ft"></footer>
 <script type="module">
-import { main, list, card, META, e, U, md, chips, SEED, send, ready, initTheme, reveal } from "./lib.js";
-initTheme(document.getElementById("th"));
+import { main, list, card, META, e, U, md, chips, SEED, send, ready, initTheme, reveal, extras } from "./lib.js";
+initTheme(document.getElementById("th")); extras();
 const d = await main(), p = d.profile || {};
-const [projects, research, certificates, press, posts] = await Promise.all(["projects", "research", "certificates", "press", "posts"].map(c => list(c, d)));
+const [projects, research, certificates, press, posts, gallery] = await Promise.all(["projects", "research", "certificates", "press", "posts", "gallery"].map(c => list(c, d)));
 const arr = k => (d[k] || []).filter(Boolean);
-const stats = d.stats ?? SEED.stats, edu = d.education ?? SEED.education;
+const services = d.services ?? SEED.services, stats = d.stats ?? SEED.stats, edu = d.education ?? SEED.education;
 document.title = (p.name || "Portfolio") + " – Portfolio";
 document.getElementById("nm").textContent = p.name || "";
 document.getElementById("ft").textContent = "© " + new Date().getFullYear() + " " + (p.name || "");
@@ -31,6 +31,8 @@ const col = (c, items, n) => items.length ? `<div class="pg">${items.slice(0, n)
 const tl = (a, f) => `<div class="tl">${a.map(f).join("")}</div>`;
 
 add("about", "About", "About me", "A little more about who I am.", p.about ? `<div class="card rv" style="padding:24px"><div class="md">${md(p.about)}</div></div>` : "");
+add("services", "Services", "What I do", "Areas where I can help.", services.length ? `<div class="sk">${services.map(s => `<div class="card sv rv"><h3>${e(s.title)}</h3><p>${e(s.desc)}</p></div>`).join("")}</div>` : "");
+add("gallery", "Gallery", "Gallery", "Moments from competitions, workshops and the lab.", gallery.length ? `<div class="gal">${gallery.slice(0, 12).map(x => `<figure class="rv" data-s="${U(x.image)}" data-c="${e(x.title)}"><img loading="lazy" src="${U(x.image)}" alt="${e(x.title)}">${x.title ? `<figcaption>${e(x.title)}</figcaption>` : ""}</figure>`).join("")}</div>` : "");
 add("skills", "Skills", "Skills", "Tools and technologies I work with.", arr("skills").length ? `<div class="sk">${arr("skills").map(s => `<div class="card rv"><h3>${e(s.group)}</h3>${chips(s.items)}</div>`).join("")}</div>` : "");
 add("projects", "Projects", ...META.projects.map(x => x), col("projects", projects, 6));
 add("research", "Research", ...META.research, col("research", research, 4));
@@ -51,11 +53,14 @@ add("contact", "Contact", "Get in touch", "Have a project, a question or an oppo
   <input name="website" class="hp2" tabindex="-1" autocomplete="off" aria-hidden="true">
   <button class="btn p" type="submit">Send message</button><div id="cs"></div></form></div>`);
 
-const hero = `<header class="hero w"><div class="rv">${p.location ? `<span class="badge">${e(p.location)}</span>` : ""}
+const ORDER = ["about", "services", "projects", "research", "experience", "certificates", "gallery", "press", "posts", "skills", "achievements", "testimonials", "contact"];
+S.sort((a, b) => ORDER.indexOf(a[0]) - ORDER.indexOf(b[0]));
+const hero = `<header class="hero w"><div class="rv">${p.location ? `<span class="badge">${e(p.location)}</span>` : ""}${p.availability ? `<span class="badge av"><i></i>${e(p.availability)}</span>` : ""}
   <h1>Hi, I’m <span class="g">${e(p.name)}</span></h1><p class="t">${e(p.title)}</p><p class="bio">${e(p.bio)}</p>
   <div class="cta"><a class="btn p" href="#contact">Get in touch</a>${projects.length ? `<a class="btn" href="#projects">View projects</a>` : ""}${p.cv ? `<a class="btn" href="${U(p.cv)}" target="_blank" rel="noopener">Download CV</a>` : ""}</div><div class="soc">${soc}</div></div>
   <div class="hp rv">${p.photo ? `<img src="${U(p.photo)}" alt="${e(p.name)}">` : `<div class="ini">${e(ini)}</div>`}</div></header>
-${stats.length ? `<div class="stats w">${stats.map(s => `<div class="st rv"><b class="g">${e(s.value)}</b><span>${e(s.label)}</span></div>`).join("")}</div>` : ""}`;
+${stats.length ? `<div class="stats w">${stats.map(s => `<div class="st rv"><b class="g">${e(s.value)}</b><span>${e(s.label)}</span></div>`).join("")}</div>` : ""}
+${p.now ? `<div class="w"><div class="card now rv"><b>Currently</b>${e(p.now)}</div></div>` : ""}`;
 
 document.getElementById("app").innerHTML = hero + S.map(s => s[2]).join("");
 document.getElementById("nl").innerHTML = S.filter(s => ["projects", "research", "experience", "posts", "contact"].includes(s[0])).map(s => `<a href="#${s[0]}">${s[1]}</a>`).join("");
@@ -72,6 +77,9 @@ cf.onsubmit = async ev => {
   b.disabled = false;
 };
 reveal();
+const lb = document.createElement("div"); lb.id = "lb"; document.body.appendChild(lb);
+lb.onclick = () => lb.classList.remove("on");
+document.querySelectorAll(".gal figure").forEach(f => f.onclick = () => { lb.innerHTML = `<img src="${f.dataset.s}" alt=""><span>${e(f.dataset.c)}</span>`; lb.classList.add("on"); });
 </script>
 </body>
 </html>

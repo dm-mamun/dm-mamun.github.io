@@ -49,8 +49,9 @@ button.x{color:#d33}
 import { defaults, ready, F, SEED, e } from "./lib.js";
 const $ = id => document.getElementById(id);
 const IMG = (l, w) => [l, "img", w], MD = "Full details (Markdown)";
-const PF = { name: "Name", title: "Headline", bio: ["Short bio (top of home page)", "area"], about: ["About me (longer, Markdown)", "long"], photo: IMG("Your photo (square works best)", 480), email: "Email", phone: "Phone / WhatsApp number", location: "Location badge (e.g. Sylhet, Bangladesh)", address: "Full address", cv: "CV link (PDF URL or file path)", github: "GitHub URL", linkedin: "LinkedIn URL", facebook: "Facebook URL", instagram: "Instagram URL", youtube: "YouTube URL", x: "X (Twitter) URL" };
+const PF = { name: "Name", title: "Headline", bio: ["Short bio (top of home page)", "area"], about: ["About me (longer, Markdown)", "long"], photo: IMG("Your photo (square works best)", 480), email: "Email", phone: "Phone / WhatsApp number", availability: "Availability badge (e.g. Open to work, Available for freelance)", now: ["Currently working on (short note)", "area"], location: "Location badge (e.g. Sylhet, Bangladesh)", address: "Full address", cv: "CV link (PDF URL or file path)", github: "GitHub URL", linkedin: "LinkedIn URL", facebook: "Facebook URL", instagram: "Instagram URL", youtube: "YouTube URL", x: "X (Twitter) URL" };
 const ARR = {
+  services: ["Services (What I do)", { title: "Service", desc: ["Description", "area"] }],
   stats: ["Highlight numbers", { value: "Number (e.g. 12+)", label: "Label" }],
   skills: ["Skills", { group: "Group", items: "Items (comma separated)" }],
   experience: ["Experience", { role: "Role", org: "Organization", date: "Date", desc: ["Description", "area"] }],
@@ -63,10 +64,11 @@ const COLS = {
   posts: ["Blog", { title: "Title", date: "Date", desc: ["Short summary", "area"], image: IMG("Cover image", 800), tags: "Tags (comma separated)", content: ["Post (Markdown)", "long"] }],
   research: ["Research", { title: "Paper title", status: ["Status", "sel", "Published,Under review,Ongoing,Unpublished"], venue: "Journal / conference", authors: "Authors", date: "Year / date", desc: ["Abstract", "area"], tags: "Keywords (comma separated)", link: "Paper / DOI link", link2: "PDF link", content: ["Extra details (Markdown, optional)", "long"] }],
   certificates: ["Certificates", { title: "Certificate name", kind: ["Type", "sel", "Course,Skill,Training,Award"], issuer: "Issued by", date: "Date", desc: ["Notes (optional)", "area"], image: IMG("Certificate image", 900), link: "Verification link (optional)" }],
+  gallery: ["Gallery", { title: "Caption", date: "Date", image: IMG("Photo", 900) }],
   press: ["Press", { title: "Headline", outlet: "Newspaper / channel / site", date: "Date", desc: ["Short note (optional)", "area"], image: IMG("Thumbnail (optional)", 600), link: "Link to the coverage" }]
 };
-const TABS = [["profile", "Profile"], ["resume", "Resume"], ["testimonials", "Testimonials"], ["projects", "Projects"], ["posts", "Blog"], ["research", "Research"], ["certificates", "Certificates"], ["press", "Press"], ["messages", "Messages"]];
-const MAINTABS = { resume: ["stats", "skills", "experience", "education", "achievements"], testimonials: ["testimonials"] };
+const TABS = [["profile", "Profile"], ["resume", "Resume"], ["testimonials", "Testimonials"], ["projects", "Projects"], ["posts", "Blog"], ["research", "Research"], ["certificates", "Certificates"], ["press", "Press"], ["gallery", "Gallery"], ["messages", "Messages"]];
+const MAINTABS = { resume: ["services", "stats", "skills", "experience", "education", "achievements"], testimonials: ["testimonials"] };
 let S = {}, tab = "profile", ctx, msgs = [], open = new Set(); const loaded = {};
 const msg = t => $("msg").textContent = t;
 const get = p => p.split(".").reduce((o, k) => o?.[k], S);
@@ -158,7 +160,7 @@ $("form").addEventListener("change", async ev => {
 });
 
 function prep(m) {
-  const M = S.main = structuredClone(m); M.profile ||= {}; M.stats ||= structuredClone(SEED.stats); M.education ||= structuredClone(SEED.education);
+  const M = S.main = structuredClone(m); M.profile ||= {}; M.stats ||= structuredClone(SEED.stats); M.services ||= structuredClone(SEED.services); M.education ||= structuredClone(SEED.education);
   for (const k of ["skills", "experience", "achievements", "testimonials"]) M[k] ||= [];
 }
 if (!ready) { $("ed").classList.remove("hide"); prep(defaults); render(); msg("Firebase not configured: nothing can be saved yet"); }

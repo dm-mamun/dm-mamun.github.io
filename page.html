@@ -7,12 +7,12 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<nav><div class="w"><b><a id="nm" href="index.html"></a></b><span class="nl"><a href="index.html">Home</a><a href="index.html#contact">Contact</a></span><button id="th" aria-label="Toggle theme">◐</button></div></nav>
+<nav><div class="w"><b><a id="nm" href="index.html"></a></b><span class="nl"><a href="index.html">Home</a><a href="index.html#contact">Contact</a></span><button id="mb" aria-label="Menu">☰</button><button id="th" aria-label="Toggle theme">◐</button></div></nav>
 <main id="app"></main>
 <footer id="ft"></footer>
 <script type="module">
-import { main, list, getOne, card, detail, META, e, initTheme, reveal } from "./lib.js";
-initTheme(document.getElementById("th"));
+import { main, list, getOne, card, detail, META, e, initTheme, reveal, extras } from "./lib.js";
+initTheme(document.getElementById("th")); extras();
 const q = new URLSearchParams(location.search), c = q.get("c"), id = q.get("id");
 if (!META[c]) location.replace("index.html");
 const d = await main(), app = document.getElementById("app");
